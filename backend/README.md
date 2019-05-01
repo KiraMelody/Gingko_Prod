@@ -13,7 +13,7 @@ in order to extract the crawled data
 
 ## Filter
 
-We apply basic news and non-news filter and English filter on the input to ensure the validity.
+We apply basic news and non-news filter and English filter in `is_news.py` on the input to ensure the validity.
 
 ## Feature Extractors
 
