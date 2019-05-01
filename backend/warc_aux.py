@@ -7,33 +7,29 @@ import pymysql
 import pymysql.cursors
 import random
 
-def getSetOfSites(filename):
-    result = set()
-    with open(filename, 'rb') as f:
-        for record in ArchiveIterator(f):
-            if record.rec_type == 'response':
-                headers = record.__dict__['http_headers'].headers
-                content_type = ""
-                for h in headers:
-                    if h[0] == 'Content-Type':
-                        content_type = h[1]
-                        break
-                if not content_type.startswith("text/html"):
-                    continue
-                rec_headers = record.__dict__['rec_headers'].headers
-                for h in rec_headers:
-                    if h[0] == 'WARC-Target-URI':
-                        if h[1].startswith("http://") or h[1].startswith("https://"):
-                            result.add(h[1][ : h[1].find('/', len('https://'))])
-                        break
-    return result
-
 def downloadSegment(remote_path, save_path):
+    """Download one segment from Amazon S3.
+
+    Args:
+        remote_path: The path where the file is stored on S3.
+        save_path: The target path to put the downloaded file.
+
+    Returns:
+        None.
+    """
     s3 = boto3.resource('s3')
     bucket = s3.Bucket("commoncrawl")
     bucket.download_file(remote_path, save_path)
 
 def loadSiteList(csv_path):
+    """Load a list of target sites (either fake or legit).
+
+    Args:
+        csv_path: The path to find the CSV file.
+
+    Returns:
+        A list of string where each string is a url.
+    """
     result = list()
     with open(csv_path) as f:
         csvreader = csv.reader(f)
@@ -42,6 +38,15 @@ def loadSiteList(csv_path):
     return result
 
 def matchSite(site_list, a_url):
+    """Check whether the given url matches any site in the list.
+
+    Args:
+        site_list: A list of string where each string is a url for a site (e.g. https://www.msnbc.com).
+        a_url: A url for any web page.
+
+    Returns:
+        The matching url string from site_list, or None if no matching is found.
+    """
     # return the matching site in the list (if found)
     # return None otherwise
     a_url = a_url.lower()
@@ -51,13 +56,25 @@ def matchSite(site_list, a_url):
     return None
 
 def storeInSQL(connection, site, http_headers, rec_headers, is_fake, raw_html):
-    """CREATE TABLE `web_pages`(
+    """Store one record into the database. Below is the data table definition:
+    CREATE TABLE `web_pages`(
         `site` TEXT,
         `is_fake` INT,
         `http_headers` MEDIUMTEXT,
         `rec_headers` MEDIUMTEXT,
         `html` MEDIUMTEXT
     );
+    
+    Args:
+        connection: The connection to the database so we can get a cursor from it.
+        site: The site (e.g. https://www.msnbc.com) of current record.
+        http_headers: HTTP header for current record.
+        rec_headers: REC header for current record.
+        is_fake: Whether current record is a record of a fake site or not (1 if fake, 0 if not).
+        raw_html: The html content of current page.
+
+    Returns:
+        None.
     """
     print(site)
     with connection.cursor() as cursor:
@@ -83,6 +100,17 @@ def storeInSQL2(connection, site, http_headers, rec_headers, raw_html):
     connection.commit()
 
 def handleOneSegment(warc_file_path, site_list, is_fake=1):
+    """Load one Common Crawl segment and save into database all the webpages whose sites can match the ones in site_list.
+    The parameter is_fake is to indicate whether site_list is a list of fake sites or legit sites.
+    
+    Args:
+        warc_file_path: The path to the downloaded segment file.
+        site_list: A list of URLs that can be loaded using loadSiteList(...) function.
+        is_fake: indicate whether site_list is a list of fake sites or legit sites.
+
+    Returns:
+        None.
+    """
     connection = pymysql.connect(host='localhost',
                                  port=8889,
                                  user='root',
@@ -111,6 +139,18 @@ def handleOneSegment(warc_file_path, site_list, is_fake=1):
     connection.close()
 
 def handleOneMonth(paths_filepath, site_list, is_fake=1):
+    """Common Crawl stores pages it crawled into segments, and publish a 'paths' file that contains pointers to the segments.
+    A sample paths file: https://commoncrawl.s3.amazonaws.com/crawl-data/CC-MAIN-2018-47/warc.paths.gz
+    This function downloads segments file and runs handleOneSegment(...) function on downloaded segment files one by one.
+    
+    Args:
+        paths_filepath: The path to the downloaded 'paths' file.
+        site_list: A list of URLs that can be loaded using loadSiteList(...) function.
+        is_fake: indicate whether site_list is a list of fake sites or legit sites.
+
+    Returns:
+        None.
+    """
     f = open(paths_filepath)
     lines = f.readlines()
     f.close()
