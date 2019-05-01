@@ -11,6 +11,10 @@ You can install Mysql and build the gingko database in the following parameters:
 
 in order to extract the crawled data
 
+## Filter
+
+We apply basic news and non-news filter and English filter on the input to ensure the validity.
+
 ## Feature Extractors
 
 All the feature extractors can be found in `extractor_accelerated.py`.
