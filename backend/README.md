@@ -35,11 +35,11 @@ All the feature extractors can be found in `extractor_accelerated.py`.
     print(te.getText())
 ```
 
-##Vectorization
+## Vectorization
 
 We get vectorized training and testing dataset from `vectorize.py`
 
-##Training
+## Training
 
 We tried several sklearn models in `training.py` and save our final model as pickle file for future use
 
