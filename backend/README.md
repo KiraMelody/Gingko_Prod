@@ -11,6 +11,10 @@ You can install Mysql and build the gingko database in the following parameters:
 
 in order to extract the crawled data
 
+## Data gathering
+
+We get our data from CommonCrawl, from 2018 Sept segment. You can easily tried `warc_aux.py` and learn how we extract the data from Amazon S3.
+
 ## Filter
 
 We apply basic news and non-news filter and English filter in `is_news.py` on the input to ensure the validity.
