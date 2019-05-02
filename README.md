@@ -6,6 +6,8 @@ The credibility score API is our main product. Advertisers and other users can q
 
 `curl http://gingkoteam.tk/api?url=https://oakridgetoday.com/2019/04/27/realtylink-has-immediate-opportunity-for-self-storage-facility/#more-107383`
 
+Or just copy and past the http request in your brouser.
+
 ## Don't you have a friendlier version for end users?
 
 This product is mainly business oriented, so we think API will be a more suitable form for them. However, we do currently provide a simple web version of our service to the users who are not comfortable with command lines. Please visit this website, type in the url you are interested in and press enter:
